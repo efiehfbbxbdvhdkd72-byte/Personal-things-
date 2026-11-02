@@ -1,0 +1,1052 @@
+--[========================================================--
+--     PERSONAL THINGS - UNIVERSAL GUI (ANTI-LAG V2)       --
+--       Speed + Infinite Jump + ESP Optimizado          --
+--[========================================================--
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local CoreGui = game:GetService("CoreGui")
+local StarterGui = game:GetService("StarterGui")
+local Workspace = game:GetService("Workspace")
+
+local player = Players.LocalPlayer
+
+-- Crear objeto de sonido global para los clics normales del menú
+local clickSound = Instance.new("Sound")
+clickSound.SoundId = "rbxassetid://122835655736085"
+clickSound.Volume = 1
+clickSound.Parent = CoreGui
+
+-- Objeto de sonido específico para cuando escribes en el TextBox
+local speedSound = Instance.new("Sound")
+speedSound.SoundId = "rbxassetid://876939830"
+speedSound.Volume = 1
+speedSound.Parent = CoreGui
+
+-- Enviar notificación de bienvenida personalizada
+pcall(function()
+	StarterGui:SetCore("SendNotification", {
+		Title = "Notificación",
+		Text = "!Bienvenido a “Personal things script”!",
+		Duration = 5
+	})
+end)
+
+-- Limpiar versiones anteriores si ya existe el GUI
+local targetParent = (RunService:IsStudio() and player.PlayerGui) or CoreGui
+if targetParent:FindFirstChild("PersonalThingsGUI") then
+	targetParent.PersonalThingsGUI:Destroy()
+end
+
+-- Crear ScreenGui principal
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "PersonalThingsGUI"
+screenGui.ResetOnSpawn = false
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+screenGui.Parent = targetParent
+
+-- Marco Principal (MainFrame)
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainFrame"
+mainFrame.Size = UDim2.new(0, 260, 0, 380)
+mainFrame.Position = UDim2.new(0.5, -130, 0.4, -190)
+mainFrame.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
+mainFrame.BorderSizePixel = 0
+mainFrame.Active = true
+mainFrame.Draggable = false
+mainFrame.Parent = screenGui
+
+local mainCorner = Instance.new("UICorner")
+mainCorner.CornerRadius = UDim.new(0, 10)
+mainCorner.Parent = mainFrame
+
+-- Barra Superior / Título (Área para arrastrar la ventana)
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Name = "TitleLabel"
+titleLabel.Size = UDim2.new(1, -70, 0, 35)
+titleLabel.Position = UDim2.new(0, 12, 0, 0)
+titleLabel.BackgroundTransparency = 1
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.Text = "Personal things"
+titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+titleLabel.TextSize = 14
+titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+titleLabel.Parent = mainFrame
+
+-- Botón de Minimizar (-)
+local minimizeBtn = Instance.new("TextButton")
+minimizeBtn.Name = "MinimizeButton"
+minimizeBtn.Size = UDim2.new(0, 24, 0, 24)
+minimizeBtn.Position = UDim2.new(1, -58, 0, 6)
+minimizeBtn.BackgroundColor3 = Color3.fromRGB(38, 38, 48)
+minimizeBtn.Font = Enum.Font.GothamBold
+minimizeBtn.Text = "-"
+minimizeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+minimizeBtn.TextSize = 16
+minimizeBtn.Parent = mainFrame
+
+local minCorner = Instance.new("UICorner")
+minCorner.CornerRadius = UDim.new(1, 0)
+minCorner.Parent = minimizeBtn
+
+-- Botón de Cerrar (X) de color rojo
+local closeBtn = Instance.new("TextButton")
+closeBtn.Name = "CloseButton"
+closeBtn.Size = UDim2.new(0, 24, 0, 24)
+closeBtn.Position = UDim2.new(1, -28, 0, 6)
+closeBtn.BackgroundColor3 = Color3.fromRGB(200, 40, 40)
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.Text = "X"
+closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+closeBtn.TextSize = 14
+closeBtn.Parent = mainFrame
+
+local closeCorner = Instance.new("UICorner")
+closeCorner.CornerRadius = UDim.new(1, 0)
+closeCorner.Parent = closeBtn
+
+-- Botón flotante estilo Delta para reabrir (Cuadrado gris con esquinas redondeadas y "P" - SIN SONIDO)
+local openBtn = Instance.new("TextButton")
+openBtn.Name = "OpenButton"
+openBtn.Size = UDim2.new(0, 45, 0, 45)
+openBtn.Position = UDim2.new(0, 20, 0.4, 0)
+openBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+openBtn.BorderSizePixel = 0
+openBtn.Visible = false
+openBtn.AutoButtonColor = false
+openBtn.Font = Enum.Font.GothamBold
+openBtn.Text = "P"
+openBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+openBtn.TextSize = 20
+openBtn.Active = true
+openBtn.Draggable = false
+openBtn.Parent = screenGui
+
+local openCorner = Instance.new("UICorner")
+openCorner.CornerRadius = UDim.new(0, 12)
+openCorner.Parent = openBtn
+
+-- Contenedor Deslizante (ScrollingFrame para hacer scroll hacia abajo)
+local scrollingContainer = Instance.new("ScrollingFrame")
+scrollingContainer.Name = "ScrollingContainer"
+scrollingContainer.Size = UDim2.new(1, 0, 1, -35)
+scrollingContainer.Position = UDim2.new(0, 0, 0, 35)
+scrollingContainer.BackgroundTransparency = 1
+scrollingContainer.CanvasSize = UDim2.new(0, 0, 0, 560)
+scrollingContainer.ScrollBarThickness = 4
+scrollingContainer.Parent = mainFrame
+
+-- Etiqueta de Velocidad Actual
+local speedInfoLabel = Instance.new("TextLabel")
+speedInfoLabel.Name = "SpeedInfoLabel"
+speedInfoLabel.Size = UDim2.new(1, -24, 0, 25)
+speedInfoLabel.Position = UDim2.new(0, 12, 0, 8)
+speedInfoLabel.BackgroundTransparency = 1
+speedInfoLabel.Font = Enum.Font.GothamMedium
+speedInfoLabel.Text = "Velocidad: 16"
+speedInfoLabel.TextColor3 = Color3.fromRGB(180, 180, 190)
+speedInfoLabel.TextSize = 13
+speedInfoLabel.TextXAlignment = Enum.TextXAlignment.Left
+speedInfoLabel.Parent = scrollingContainer
+
+-- Fondo del Slider
+local sliderBG = Instance.new("Frame")
+sliderBG.Name = "SliderBackground"
+sliderBG.Size = UDim2.new(1, -24, 0, 8)
+sliderBG.Position = UDim2.new(0, 12, 0, 41)
+sliderBG.BackgroundColor3 = Color3.fromRGB(38, 38, 48)
+sliderBG.BorderSizePixel = 0
+sliderBG.Parent = scrollingContainer
+
+local sliderBGCorner = Instance.new("UICorner")
+sliderBGCorner.CornerRadius = UDim.new(1, 0)
+sliderBGCorner.Parent = sliderBG
+
+-- Barra de Relleno del Slider
+local sliderFill = Instance.new("Frame")
+sliderFill.Name = "SliderFill"
+sliderFill.Size = UDim2.new(0, 0, 1, 0)
+sliderFill.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+sliderFill.BorderSizePixel = 0
+sliderFill.Parent = sliderBG
+
+local sliderFillCorner = Instance.new("UICorner")
+sliderFillCorner.CornerRadius = UDim.new(1, 0)
+sliderFillCorner.Parent = sliderFill
+
+-- Botón Deslizante (Knob)
+local sliderKnob = Instance.new("Frame")
+sliderKnob.Name = "SliderKnob"
+sliderKnob.Size = UDim2.new(0, 16, 0, 16)
+sliderKnob.Position = UDim2.new(0, -8, 0.5, -8)
+sliderKnob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+sliderKnob.BorderSizePixel = 0
+sliderKnob.Parent = sliderBG
+
+local knobCorner = Instance.new("UICorner")
+knobCorner.CornerRadius = UDim.new(1, 0)
+knobCorner.Parent = sliderKnob
+
+-- TextBox para escribir la velocidad exacta
+local speedTextBox = Instance.new("TextBox")
+speedTextBox.Name = "SpeedTextBox"
+speedTextBox.Size = UDim2.new(1, -24, 0, 28)
+speedTextBox.Position = UDim2.new(0, 12, 0, 56)
+speedTextBox.BackgroundColor3 = Color3.fromRGB(38, 38, 48)
+speedTextBox.Font = Enum.Font.GothamMedium
+speedTextBox.PlaceholderText = "Escribe velocidad..."
+speedTextBox.Text = "16"
+speedTextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+speedTextBox.TextSize = 13
+speedTextBox.ClearTextOnFocus = false
+speedTextBox.Parent = scrollingContainer
+
+local speedBoxCorner = Instance.new("UICorner")
+speedBoxCorner.CornerRadius = UDim.new(0, 6)
+speedBoxCorner.Parent = speedTextBox
+
+-- Botón de Reset
+local resetBtn = Instance.new("TextButton")
+resetBtn.Name = "ResetButton"
+resetBtn.Size = UDim2.new(1, -24, 0, 28)
+resetBtn.Position = UDim2.new(0, 12, 0, 93)
+resetBtn.BackgroundColor3 = Color3.fromRGB(200, 40, 40)
+resetBtn.Font = Enum.Font.GothamBold
+resetBtn.Text = "Reset"
+resetBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+resetBtn.TextSize = 13
+resetBtn.Parent = scrollingContainer
+
+local resetCorner = Instance.new("UICorner")
+resetCorner.CornerRadius = UDim.new(0, 6)
+resetCorner.Parent = resetBtn
+
+-- Botón de Infinite Jump
+local infJumpBtn = Instance.new("TextButton")
+infJumpBtn.Name = "InfiniteJumpButton"
+infJumpBtn.Size = UDim2.new(1, -24, 0, 28)
+infJumpBtn.Position = UDim2.new(0, 12, 0, 127)
+infJumpBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 65)
+infJumpBtn.Font = Enum.Font.GothamBold
+infJumpBtn.Text = "Infinite Jump: OFF"
+infJumpBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+infJumpBtn.TextSize = 13
+infJumpBtn.Parent = scrollingContainer
+
+local infJumpCorner = Instance.new("UICorner")
+infJumpCorner.CornerRadius = UDim.new(0, 6)
+infJumpCorner.Parent = infJumpBtn
+
+-- Botón de ESP Jugadores General
+local espBtn = Instance.new("TextButton")
+espBtn.Name = "ESPButton"
+espBtn.Size = UDim2.new(1, -24, 0, 28)
+espBtn.Position = UDim2.new(0, 12, 0, 161)
+espBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 65)
+espBtn.Font = Enum.Font.GothamBold
+espBtn.Text = "ESP Arcoíris: OFF"
+espBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+espBtn.TextSize = 13
+espBtn.Parent = scrollingContainer
+
+local espCorner = Instance.new("UICorner")
+espCorner.CornerRadius = UDim.new(0, 6)
+espCorner.Parent = espBtn
+
+-- Nombres Jugadores General
+local espPlayerNamesBtn = Instance.new("TextButton")
+espPlayerNamesBtn.Name = "ESPPlayerNamesButton"
+espPlayerNamesBtn.Size = UDim2.new(1, -24, 0, 28)
+espPlayerNamesBtn.Position = UDim2.new(0, 12, 0, 195)
+espPlayerNamesBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 65)
+espPlayerNamesBtn.Font = Enum.Font.GothamBold
+espPlayerNamesBtn.Text = "Nombres Jugadores: OFF"
+espPlayerNamesBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+espPlayerNamesBtn.TextSize = 13
+espPlayerNamesBtn.Parent = scrollingContainer
+
+local espPlayerNamesCorner = Instance.new("UICorner")
+espPlayerNamesCorner.CornerRadius = UDim.new(0, 6)
+espPlayerNamesCorner.Parent = espPlayerNamesBtn
+
+-- Abrir Lista de Jugadores
+local playerListMenuBtn = Instance.new("TextButton")
+playerListMenuBtn.Name = "PlayerListMenuButton"
+playerListMenuBtn.Size = UDim2.new(1, -24, 0, 28)
+playerListMenuBtn.Position = UDim2.new(0, 12, 0, 229)
+playerListMenuBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 65)
+playerListMenuBtn.Font = Enum.Font.GothamBold
+playerListMenuBtn.Text = "Lista Servidor (Jugadores)"
+playerListMenuBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+playerListMenuBtn.TextSize = 13
+playerListMenuBtn.Parent = scrollingContainer
+
+local playerListMenuCorner = Instance.new("UICorner")
+playerListMenuCorner.CornerRadius = UDim.new(0, 6)
+playerListMenuCorner.Parent = playerListMenuBtn
+
+-- ESP Jugadores Seleccionados
+local espSelectedPlayersBtn = Instance.new("TextButton")
+espSelectedPlayersBtn.Name = "ESPSelectedPlayersButton"
+espSelectedPlayersBtn.Size = UDim2.new(1, -24, 0, 28)
+espSelectedPlayersBtn.Position = UDim2.new(0, 12, 0, 263)
+espSelectedPlayersBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 65)
+espSelectedPlayersBtn.Font = Enum.Font.GothamBold
+espSelectedPlayersBtn.Text = "ESP Jugadores Sel.: OFF"
+espSelectedPlayersBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+espSelectedPlayersBtn.TextSize = 13
+espSelectedPlayersBtn.Parent = scrollingContainer
+
+local espSelectedPlayersCorner = Instance.new("UICorner")
+espSelectedPlayersCorner.CornerRadius = UDim.new(0, 6)
+espSelectedPlayersCorner.Parent = espSelectedPlayersBtn
+
+-- Nombres Jugadores Seleccionados
+local espSelectedPlayersNamesBtn = Instance.new("TextButton")
+espSelectedPlayersNamesBtn.Name = "ESPSelectedPlayersNamesButton"
+espSelectedPlayersNamesBtn.Size = UDim2.new(1, -24, 0, 28)
+espSelectedPlayersNamesBtn.Position = UDim2.new(0, 12, 0, 297)
+espSelectedPlayersNamesBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 65)
+espSelectedPlayersNamesBtn.Font = Enum.Font.GothamBold
+espSelectedPlayersNamesBtn.Text = "Nombres J. Sel.: OFF"
+espSelectedPlayersNamesBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+espSelectedPlayersNamesBtn.TextSize = 13
+espSelectedPlayersNamesBtn.Parent = scrollingContainer
+
+local espSelectedPlayersNamesCorner = Instance.new("UICorner")
+espSelectedPlayersNamesCorner.CornerRadius = UDim.new(0, 6)
+espSelectedPlayersNamesCorner.Parent = espSelectedPlayersNamesBtn
+
+-- Nombres NPCs General
+local espNpcNamesBtn = Instance.new("TextButton")
+espNpcNamesBtn.Name = "ESPNPCNamesButton"
+espNpcNamesBtn.Size = UDim2.new(1, -24, 0, 28)
+espNpcNamesBtn.Position = UDim2.new(0, 12, 0, 331)
+espNpcNamesBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 65)
+espNpcNamesBtn.Font = Enum.Font.GothamBold
+espNpcNamesBtn.Text = "Nombres NPC: OFF"
+espNpcNamesBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+espNpcNamesBtn.TextSize = 13
+espNpcNamesBtn.Parent = scrollingContainer
+
+local espNpcNamesCorner = Instance.new("UICorner")
+espNpcNamesCorner.CornerRadius = UDim.new(0, 6)
+espNpcNamesCorner.Parent = espNpcNamesBtn
+
+-- Abrir Lista de NPCs
+local npcListMenuBtn = Instance.new("TextButton")
+npcListMenuBtn.Name = "NPCListMenuButton"
+npcListMenuBtn.Size = UDim2.new(1, -24, 0, 28)
+npcListMenuBtn.Position = UDim2.new(0, 12, 0, 365)
+npcListMenuBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 65)
+npcListMenuBtn.Font = Enum.Font.GothamBold
+npcListMenuBtn.Text = "Lista Servidor (NPCs)"
+npcListMenuBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+npcListMenuBtn.TextSize = 13
+npcListMenuBtn.Parent = scrollingContainer
+
+local npcListMenuCorner = Instance.new("UICorner")
+npcListMenuCorner.CornerRadius = UDim.new(0, 6)
+npcListMenuCorner.Parent = npcListMenuBtn
+
+-- ESP NPCs Seleccionados
+local espSelectedNpcsBtn = Instance.new("TextButton")
+espSelectedNpcsBtn.Name = "ESPSelectedNpcsButton"
+espSelectedNpcsBtn.Size = UDim2.new(1, -24, 0, 28)
+espSelectedNpcsBtn.Position = UDim2.new(0, 12, 0, 399)
+espSelectedNpcsBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 65)
+espSelectedNpcsBtn.Font = Enum.Font.GothamBold
+espSelectedNpcsBtn.Text = "ESP NPCs Sel.: OFF"
+espSelectedNpcsBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+espSelectedNpcsBtn.TextSize = 13
+espSelectedNpcsBtn.Parent = scrollingContainer
+
+local espSelectedNpcsCorner = Instance.new("UICorner")
+espSelectedNpcsCorner.CornerRadius = UDim.new(0, 6)
+espSelectedNpcsCorner.Parent = espSelectedNpcsBtn
+
+-- Nombres NPCs Seleccionados
+local espSelectedNpcsNamesBtn = Instance.new("TextButton")
+espSelectedNpcsNamesBtn.Name = "ESPSelectedNpcsNamesButton"
+espSelectedNpcsNamesBtn.Size = UDim2.new(1, -24, 0, 28)
+espSelectedNpcsNamesBtn.Position = UDim2.new(0, 12, 0, 433)
+espSelectedNpcsNamesBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 65)
+espSelectedNpcsNamesBtn.Font = Enum.Font.GothamBold
+espSelectedNpcsNamesBtn.Text = "Nombres NPCs Sel.: OFF"
+espSelectedNpcsNamesBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+espSelectedNpcsNamesBtn.TextSize = 13
+espSelectedNpcsNamesBtn.Parent = scrollingContainer
+
+local espSelectedNpcsNamesCorner = Instance.new("UICorner")
+espSelectedNpcsNamesCorner.CornerRadius = UDim.new(0, 6)
+espSelectedNpcsNamesCorner.Parent = espSelectedNpcsNamesBtn
+
+-- Botón de ESP NPCs General
+local espNpcBtn = Instance.new("TextButton")
+espNpcBtn.Name = "ESPNPCButton"
+espNpcBtn.Size = UDim2.new(1, -24, 0, 28)
+espNpcBtn.Position = UDim2.new(0, 12, 0, 467)
+espNpcBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 65)
+espNpcBtn.Font = Enum.Font.GothamBold
+espNpcBtn.Text = "ESP NPCTIVO: OFF"
+espNpcBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+espNpcBtn.TextSize = 13
+espNpcBtn.Parent = scrollingContainer
+
+local espNpcCorner = Instance.new("UICorner")
+espNpcCorner.CornerRadius = UDim.new(0, 6)
+espNpcCorner.Parent = espNpcBtn
+
+--[========================================================--
+--            VENTANAS FLOTANTES DE LISTAS                 --
+--[========================================================--
+
+-- Cuadrito Flotante de Jugadores
+local playerListFrame = Instance.new("Frame")
+playerListFrame.Name = "PlayerListFrame"
+playerListFrame.Size = UDim2.new(0, 220, 0, 250)
+playerListFrame.Position = UDim2.new(1, 10, 0, 0)
+playerListFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 24)
+playerListFrame.BorderSizePixel = 0
+playerListFrame.Visible = false
+playerListFrame.Parent = mainFrame
+
+local pListCorner = Instance.new("UICorner")
+pListCorner.CornerRadius = UDim.new(0, 8)
+pListCorner.Parent = playerListFrame
+
+local pListTitle = Instance.new("TextLabel")
+pListTitle.Size = UDim2.new(1, 0, 0, 30)
+pListTitle.BackgroundTransparency = 1
+pListTitle.Font = Enum.Font.GothamBold
+pListTitle.Text = "Seleccionar Jugadores"
+pListTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+pListTitle.TextSize = 13
+pListTitle.Parent = playerListFrame
+
+local playerScroll = Instance.new("ScrollingFrame")
+playerScroll.Size = UDim2.new(1, -10, 1, -40)
+playerScroll.Position = UDim2.new(0, 5, 0, 35)
+playerScroll.BackgroundTransparency = 1
+playerScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+playerScroll.ScrollBarThickness = 4
+playerScroll.Parent = playerListFrame
+
+local pListLayout = Instance.new("UIListLayout")
+pListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+pListLayout.Padding = UDim.new(0, 4)
+pListLayout.Parent = playerScroll
+
+-- Cuadrito Flotante de NPCs
+local npcListFrame = Instance.new("Frame")
+npcListFrame.Name = "NPCListFrame"
+npcListFrame.Size = UDim2.new(0, 220, 0, 250)
+npcListFrame.Position = UDim2.new(1, 10, 0, 0)
+npcListFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 24)
+npcListFrame.BorderSizePixel = 0
+npcListFrame.Visible = false
+npcListFrame.Parent = mainFrame
+
+local nListCorner = Instance.new("UICorner")
+nListCorner.CornerRadius = UDim.new(0, 8)
+nListCorner.Parent = npcListFrame
+
+local nListTitle = Instance.new("TextLabel")
+nListTitle.Size = UDim2.new(1, 0, 0, 30)
+nListTitle.BackgroundTransparency = 1
+nListTitle.Font = Enum.Font.GothamBold
+nListTitle.Text = "Seleccionar NPCs"
+nListTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+nListTitle.TextSize = 13
+nListTitle.Parent = npcListFrame
+
+local npcScroll = Instance.new("ScrollingFrame")
+npcScroll.Size = UDim2.new(1, -10, 1, -40)
+npcScroll.Position = UDim2.new(0, 5, 0, 35)
+npcScroll.BackgroundTransparency = 1
+npcScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+npcScroll.ScrollBarThickness = 4
+npcScroll.Parent = npcListFrame
+
+local nListLayout = Instance.new("UIListLayout")
+nListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+nListLayout.Padding = UDim.new(0, 4)
+nListLayout.Parent = npcScroll
+
+--[========================================================--
+--                  LÓGICA DE FUNCIONALIDADES              --
+--[========================================================--
+
+local MIN_SPEED = 16
+local MAX_SPEED = 500
+local currentSpeed = MIN_SPEED
+local isMinimized = false
+local isDraggingSlider = false
+local isDraggingWindow = false
+local infiniteJumpEnabled = false
+local espEnabled = false
+local espNpcEnabled = false
+local espPlayerNamesEnabled = false
+local espNpcNamesEnabled = false
+local espSelectedPlayersEnabled = false
+local espSelectedPlayersNamesEnabled = false
+local espSelectedNpcsEnabled = false
+local espSelectedNpcsNamesEnabled = false
+
+local selectedPlayers = {}
+local selectedNpcs = {}
+
+local dragStartWindow
+local startPosWindow
+local espFolder = Instance.new("Folder")
+espFolder.Name = "ESPFanFolder"
+espFolder.Parent = targetParent
+
+local function playClick()
+	clickSound:Play()
+end
+
+local function playSpeedSound()
+	speedSound:Play()
+end
+
+local function getHumanoid()
+	local character = player.Character
+	if character then
+		return character:FindFirstChildOfClass("Humanoid")
+	end
+	return nil
+end
+
+local function applySpeed(speed, updateBox)
+	currentSpeed = math.clamp(speed, MIN_SPEED, MAX_SPEED)
+	speedInfoLabel.Text = "Velocidad: " .. math.floor(currentSpeed)
+	
+	if updateBox then
+		speedTextBox.Text = tostring(math.floor(currentSpeed))
+	end
+	
+	-- Actualizar posición visual del slider automáticamente
+	local posRelative = (currentSpeed - MIN_SPEED) / (MAX_SPEED - MIN_SPEED)
+	sliderFill.Size = UDim2.new(posRelative, 0, 1, 0)
+	sliderKnob.Position = UDim2.new(posRelative, -8, 0.5, -8)
+end
+
+RunService.Heartbeat:Connect(function()
+	local humanoid = getHumanoid()
+	if humanoid then
+		if humanoid.WalkSpeed ~= currentSpeed then
+			humanoid.WalkSpeed = currentSpeed
+		end
+	end
+end)
+
+UserInputService.JumpRequest:Connect(function()
+	if infiniteJumpEnabled then
+		local humanoid = getHumanoid()
+		if humanoid then
+			humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+		end
+	end
+end)
+
+infJumpBtn.MouseButton1Click:Connect(function()
+	playClick()
+	infiniteJumpEnabled = not infiniteJumpEnabled
+	infJumpBtn.Text = infiniteJumpEnabled and "Infinite Jump: ON" or "Infinite Jump: OFF"
+	infJumpBtn.BackgroundColor3 = infiniteJumpEnabled and Color3.fromRGB(40, 180, 80) or Color3.fromRGB(50, 50, 65)
+end)
+
+espBtn.MouseButton1Click:Connect(function()
+	playClick()
+	espEnabled = not espEnabled
+	espBtn.Text = espEnabled and "ESP Arcoíris: ON" or "ESP Arcoíris: OFF"
+	espBtn.BackgroundColor3 = espEnabled and Color3.fromRGB(40, 180, 80) or Color3.fromRGB(50, 50, 65)
+end)
+
+espPlayerNamesBtn.MouseButton1Click:Connect(function()
+	playClick()
+	espPlayerNamesEnabled = not espPlayerNamesEnabled
+	espPlayerNamesBtn.Text = espPlayerNamesEnabled and "Nombres Jugadores: ON" or "Nombres Jugadores: OFF"
+	espPlayerNamesBtn.BackgroundColor3 = espPlayerNamesEnabled and Color3.fromRGB(40, 180, 80) or Color3.fromRGB(50, 50, 65)
+end)
+
+espNpcNamesBtn.MouseButton1Click:Connect(function()
+	playClick()
+	espNpcNamesEnabled = not espNpcNamesEnabled
+	espNpcNamesBtn.Text = espNpcNamesEnabled and "Nombres NPC: ON" or "Nombres NPC: OFF"
+	espNpcNamesBtn.BackgroundColor3 = espNpcNamesEnabled and Color3.fromRGB(40, 180, 80) or Color3.fromRGB(50, 50, 65)
+end)
+
+espNpcBtn.MouseButton1Click:Connect(function()
+	playClick()
+	espNpcEnabled = not espNpcEnabled
+	espNpcBtn.Text = espNpcEnabled and "ESP NPCTIVO: ON" or "ESP NPCTIVO: OFF"
+	espNpcBtn.BackgroundColor3 = espNpcEnabled and Color3.fromRGB(40, 180, 80) or Color3.fromRGB(50, 50, 65)
+end)
+
+espSelectedPlayersBtn.MouseButton1Click:Connect(function()
+	playClick()
+	espSelectedPlayersEnabled = not espSelectedPlayersEnabled
+	espSelectedPlayersBtn.Text = espSelectedPlayersEnabled and "ESP Jugadores Sel.: ON" or "ESP Jugadores Sel.: OFF"
+	espSelectedPlayersBtn.BackgroundColor3 = espSelectedPlayersEnabled and Color3.fromRGB(40, 180, 80) or Color3.fromRGB(50, 50, 65)
+end)
+
+espSelectedPlayersNamesBtn.MouseButton1Click:Connect(function()
+	playClick()
+	espSelectedPlayersNamesEnabled = not espSelectedPlayersNamesEnabled
+	espSelectedPlayersNamesBtn.Text = espSelectedPlayersNamesEnabled and "Nombres J. Sel.: ON" or "Nombres J. Sel.: OFF"
+	espSelectedPlayersNamesBtn.BackgroundColor3 = espSelectedPlayersNamesEnabled and Color3.fromRGB(40, 180, 80) or Color3.fromRGB(50, 50, 65)
+end)
+
+espSelectedNpcsBtn.MouseButton1Click:Connect(function()
+	playClick()
+	espSelectedNpcsEnabled = not espSelectedNpcsEnabled
+	espSelectedNpcsBtn.Text = espSelectedNpcsEnabled and "ESP NPCs Sel.: ON" or "ESP NPCs Sel.: OFF"
+	espSelectedNpcsBtn.BackgroundColor3 = espSelectedNpcsEnabled and Color3.fromRGB(40, 180, 80) or Color3.fromRGB(50, 50, 65)
+end)
+
+espSelectedNpcsNamesBtn.MouseButton1Click:Connect(function()
+	playClick()
+	espSelectedNpcsNamesEnabled = not espSelectedNpcsNamesEnabled
+	espSelectedNpcsNamesBtn.Text = espSelectedNpcsNamesEnabled and "Nombres NPCs Sel.: ON" or "Nombres NPCs Sel.: OFF"
+	espSelectedNpcsNamesBtn.BackgroundColor3 = espSelectedNpcsNamesEnabled and Color3.fromRGB(40, 180, 80) or Color3.fromRGB(50, 50, 65)
+end)
+
+playerListMenuBtn.MouseButton1Click:Connect(function()
+	playClick()
+	playerListFrame.Visible = not playerListFrame.Visible
+	npcListFrame.Visible = false
+end)
+
+npcListMenuBtn.MouseButton1Click:Connect(function()
+	playClick()
+	npcListFrame.Visible = not npcListFrame.Visible
+	playerListFrame.Visible = false
+end)
+
+-- Variable para controlar el sonido mientras escribes sin que se sature con cada carácter interno de Roblox
+local lastTextLength = string.len(speedTextBox.Text)
+
+speedTextBox:GetPropertyChangedSignal("Text"):Connect(function()
+	local currentLength = string.len(speedTextBox.Text)
+	if currentLength ~= lastTextLength then
+		playSpeedSound()
+		lastTextLength = currentLength
+	end
+	
+	local num = tonumber(speedTextBox.Text)
+	if num then
+		currentSpeed = math.clamp(num, MIN_SPEED, MAX_SPEED)
+		speedInfoLabel.Text = "Velocidad: " .. math.floor(currentSpeed)
+		
+		-- Actualizar posición visual del slider en tiempo real
+		local posRelative = (currentSpeed - MIN_SPEED) / (MAX_SPEED - MIN_SPEED)
+		sliderFill.Size = UDim2.new(posRelative, 0, 1, 0)
+		sliderKnob.Position = UDim2.new(posRelative, -8, 0.5, -8)
+	end
+end)
+
+local function actualizarListaJugadores()
+	for _, child in ipairs(playerScroll:GetChildren()) do
+		if child:IsA("TextButton") then
+			child:Destroy()
+		end
+	end
+	
+	local yOffset = 0
+	for _, p in ipairs(Players:GetPlayers()) do
+		if p ~= player then
+			local btn = Instance.new("TextButton")
+			btn.Size = UDim2.new(1, -4, 0, 36)
+			btn.BackgroundColor3 = selectedPlayers[p] and Color3.fromRGB(40, 140, 80) or Color3.fromRGB(35, 35, 45)
+			btn.AutoButtonColor = false
+			btn.Text = ""
+			btn.Parent = playerScroll
+			
+			local corner = Instance.new("UICorner")
+			corner.CornerRadius = UDim.new(0, 4)
+			corner.Parent = btn
+			
+			local dispLabel = Instance.new("TextLabel")
+			dispLabel.Size = UDim2.new(1, -8, 0, 18)
+			dispLabel.Position = UDim2.new(0, 4, 0, 2)
+			dispLabel.BackgroundTransparency = 1
+			dispLabel.Font = Enum.Font.GothamBold
+			dispLabel.Text = p.DisplayName
+			dispLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+			dispLabel.TextSize = 12
+			dispLabel.TextXAlignment = Enum.TextXAlignment.Left
+			dispLabel.Parent = btn
+			
+			local origLabel = Instance.new("TextLabel")
+			origLabel.Size = UDim2.new(1, -8, 0, 14)
+			origLabel.Position = UDim2.new(0, 4, 0, 18)
+			origLabel.BackgroundTransparency = 1
+			origLabel.Font = Enum.Font.Gotham
+			origLabel.Text = "@" .. p.Name
+			origLabel.TextColor3 = Color3.fromRGB(150, 150, 160)
+			origLabel.TextSize = 10
+			origLabel.TextXAlignment = Enum.TextXAlignment.Left
+			origLabel.Parent = btn
+			
+			btn.MouseButton1Click:Connect(function()
+				playClick()
+				if selectedPlayers[p] then
+					selectedPlayers[p] = nil
+					btn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+				else
+					selectedPlayers[p] = true
+					btn.BackgroundColor3 = Color3.fromRGB(40, 140, 80)
+				end
+			end)
+			
+			yOffset = yOffset + 40
+		end
+	end
+	playerScroll.CanvasSize = UDim2.new(0, 0, 0, yOffset)
+end
+
+local function actualizarListaNpcs()
+	for _, child in ipairs(npcScroll:GetChildren()) do
+		if child:IsA("TextButton") then
+			child:Destroy()
+		end
+	end
+	
+	local yOffset = 0
+	local uniqueNpcs = {}
+	
+	for _, desc in ipairs(Workspace:GetDescendants()) do
+		if desc:IsA("Model") and desc:FindFirstChildOfClass("Humanoid") then
+			local isPlayerChar = false
+			for _, p in ipairs(Players:GetPlayers()) do
+				if p.Character == desc then
+					isPlayerChar = true
+					break
+				end
+			end
+			
+			if not isPlayerChar and not uniqueNpcs[desc] then
+				uniqueNpcs[desc] = true
+				
+				local btn = Instance.new("TextButton")
+				btn.Size = UDim2.new(1, -4, 0, 36)
+				btn.BackgroundColor3 = selectedNpcs[desc] and Color3.fromRGB(40, 140, 80) or Color3.fromRGB(35, 35, 45)
+				btn.AutoButtonColor = false
+				btn.Text = ""
+				btn.Parent = npcScroll
+				
+				local corner = Instance.new("UICorner")
+				corner.CornerRadius = UDim.new(0, 4)
+				corner.Parent = btn
+				
+				local nameLabel = Instance.new("TextLabel")
+				nameLabel.Size = UDim2.new(1, -8, 0, 18)
+				nameLabel.Position = UDim2.new(0, 4, 0, 2)
+				nameLabel.BackgroundTransparency = 1
+				nameLabel.Font = Enum.Font.GothamBold
+				nameLabel.Text = desc.Name
+				nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+				nameLabel.TextSize = 12
+				nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+				nameLabel.Parent = btn
+				
+				local infoLabel = Instance.new("TextLabel")
+				infoLabel.Size = UDim2.new(1, -8, 0, 14)
+				infoLabel.Position = UDim2.new(0, 4, 0, 18)
+				infoLabel.BackgroundTransparency = 1
+				infoLabel.Font = Enum.Font.Gotham
+				infoLabel.Text = "NPC / Monstruo"
+				infoLabel.TextColor3 = Color3.fromRGB(150, 150, 160)
+				infoLabel.TextSize = 10
+				infoLabel.TextXAlignment = Enum.TextXAlignment.Left
+				infoLabel.Parent = btn
+				
+				btn.MouseButton1Click:Connect(function()
+					playClick()
+					if selectedNpcs[desc] then
+						selectedNpcs[desc] = nil
+						btn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+					else
+						selectedNpcs[desc] = true
+						btn.BackgroundColor3 = Color3.fromRGB(40, 140, 80)
+					end
+				end)
+				
+				yOffset = yOffset + 40
+			end
+		end
+	end
+	npcScroll.CanvasSize = UDim2.new(0, 0, 0, yOffset)
+end
+
+task.spawn(function()
+	while true do
+		if playerListFrame.Visible then
+			actualizarListaJugadores()
+		end
+		if npcListFrame.Visible then
+			actualizarListaNpcs()
+		end
+		task.wait(2)
+	end
+end)
+
+task.spawn(function()
+	while true do
+		local rainbowColor = Color3.fromHSV(tick() % 5 / 5, 1, 1)
+		local anyActive = espEnabled or espNpcEnabled or espPlayerNamesEnabled or espNpcNamesEnabled or espSelectedPlayersEnabled or espSelectedPlayersNamesEnabled or espSelectedNpcsEnabled or espSelectedNpcsNamesEnabled
+		
+		if not anyActive then
+			espFolder:ClearAllChildren()
+		else
+			espFolder:ClearAllChildren()
+			local targets = {}
+			
+			if espEnabled or espPlayerNamesEnabled then
+				for _, otherPlayer in ipairs(Players:GetPlayers()) do
+					if otherPlayer ~= player and otherPlayer.Character then
+						table.insert(targets, {model = otherPlayer.Character, name = otherPlayer.DisplayName .. " (@" .. otherPlayer.Name .. ")", isPlayer = true})
+					end
+				end
+			end
+			
+			if espSelectedPlayersEnabled or espSelectedPlayersNamesEnabled then
+				for p, _ in pairs(selectedPlayers) do
+					if p and p.Character then
+						local alreadyAdded = false
+						for _, t in ipairs(targets) do
+							if t.model == p.Character then alreadyAdded = true break end
+						end
+						if not alreadyAdded then
+							table.insert(targets, {model = p.Character, name = p.DisplayName .. " (@" .. p.Name .. ")", isPlayer = true})
+						end
+					end
+				end
+			end
+			
+			if espNpcEnabled or espNpcNamesEnabled then
+				for _, descendant in ipairs(Workspace:GetDescendants()) do
+					if descendant:IsA("Model") and descendant:FindFirstChildOfClass("Humanoid") then
+						local isPlayerChar = false
+						for _, p in ipairs(Players:GetPlayers()) do
+							if p.Character == descendant then isPlayerChar = true break end
+						end
+						if not isPlayerChar then
+							table.insert(targets, {model = descendant, name = descendant.Name, isPlayer = false})
+						end
+					end
+				end
+			end
+			
+			if espSelectedNpcsEnabled or espSelectedNpcsNamesEnabled then
+				for npcModel, _ in pairs(selectedNpcs) do
+					if npcModel and npcModel.Parent then
+						local alreadyAdded = false
+						for _, t in ipairs(targets) do
+							if t.model == npcModel then alreadyAdded = true break end
+						end
+						if not alreadyAdded then
+							table.insert(targets, {model = npcModel, name = npcModel.Name, isPlayer = false})
+						end
+					end
+				end
+			end
+			
+			for _, target in ipairs(targets) do
+				local char = target.model
+				local rootPart = char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso")
+				
+				if rootPart then
+					local myChar = player.Character
+					local distance = 0
+					if myChar and (myChar:FindFirstChild("HumanoidRootPart") or myChar:FindFirstChild("Torso")) then
+						local myRoot = myChar:FindFirstChild("HumanoidRootPart") or myChar:FindFirstChild("Torso")
+						distance = math.floor((rootPart.Position - myRoot.Position).Magnitude)
+					end
+					
+					local shouldHighlight = false
+					if target.isPlayer then
+						if espEnabled or (espSelectedPlayersEnabled and selectedPlayers[Players:GetPlayerFromCharacter(char)]) then
+							shouldHighlight = true
+						end
+					else
+						if espNpcEnabled or (espSelectedNpcsEnabled and selectedNpcs[char]) then
+							shouldHighlight = true
+						end
+					end
+					
+					if shouldHighlight then
+						local highlight = Instance.new("Highlight")
+						highlight.Adornee = char
+						highlight.FillColor = rainbowColor
+						highlight.FillTransparency = 0.5
+						highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+						highlight.OutlineTransparency = 0
+						highlight.Parent = espFolder
+					end
+					
+					local shouldShowText = false
+					if target.isPlayer then
+						if espPlayerNamesEnabled or (espSelectedPlayersNamesEnabled and selectedPlayers[Players:GetPlayerFromCharacter(char)]) then
+							shouldShowText = true
+						end
+					else
+						if espNpcNamesEnabled or (espSelectedNpcsNamesEnabled and selectedNpcs[char]) then
+							shouldShowText = true
+						end
+					end
+					
+					if shouldShowText then
+						local billboard = Instance.new("BillboardGui")
+						billboard.Size = UDim2.new(0, 200, 0, 50)
+						billboard.StudsOffset = Vector3.new(0, 3, 0)
+						billboard.AlwaysOnTop = true
+						
+						local textLabel = Instance.new("TextLabel")
+						textLabel.Size = UDim2.new(1, 0, 1, 0)
+						textLabel.BackgroundTransparency = 1
+						textLabel.Font = Enum.Font.GothamBold
+						textLabel.TextSize = 13
+						textLabel.TextColor3 = rainbowColor
+						textLabel.TextStrokeTransparency = 0
+						textLabel.Text = target.name .. "\n[" .. distance .. "m]"
+						textLabel.Parent = billboard
+						
+						billboard.Adornee = rootPart
+						billboard.Parent = espFolder
+					end
+				end
+			end
+		end
+		
+		task.wait(0.3)
+	end
+end)
+
+local function updateSlider(inputPositionX)
+	local absolutePosition = sliderBG.AbsolutePosition.X
+	local absoluteSize = sliderBG.AbsoluteSize.X
+	
+	if absoluteSize <= 0 then return end
+	
+	local posRelative = math.clamp((inputPositionX - absolutePosition) / absoluteSize, 0, 1)
+	local newSpeed = MIN_SPEED + (posRelative * (MAX_SPEED - MIN_SPEED))
+	
+	applySpeed(newSpeed, true)
+end
+
+-- Lógica para arrastrar el menú principal
+titleLabel.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		isDraggingWindow = true
+		dragStartWindow = input.Position
+		startPosWindow = mainFrame.AbsolutePosition
+	end
+end)
+
+sliderBG.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		isDraggingSlider = true
+		updateSlider(input.Position.X)
+	end
+end)
+
+-- Lógica de Arrastre Manual para el Botón Flotante "P"
+local isDraggingOpenBtn = false
+local dragStartOpenBtn
+local startPosOpenBtn
+local hasMovedOpenBtn = false
+
+openBtn.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		isDraggingOpenBtn = true
+		hasMovedOpenBtn = false
+		dragStartOpenBtn = input.Position
+		startPosOpenBtn = openBtn.AbsolutePosition
+	end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		isDraggingSlider = false
+		isDraggingWindow = false
+		isDraggingOpenBtn = false
+	end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+	if (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+		if isDraggingSlider then
+			updateSlider(input.Position.X)
+		elseif isDraggingWindow then
+			local delta = input.Position - dragStartWindow
+			local newX = startPosWindow.X + delta.X
+			local newY = startPosWindow.Y + delta.Y
+			
+			local viewportSize = workspace.CurrentCamera.ViewportSize
+			local frameSize = mainFrame.AbsoluteSize
+			
+			newX = math.clamp(newX, 0, viewportSize.X - frameSize.X)
+			newY = math.clamp(newY, 0, viewportSize.Y - frameSize.Y)
+			
+			mainFrame.Position = UDim2.new(0, newX, 0, newY)
+		elseif isDraggingOpenBtn then
+			local delta = input.Position - dragStartOpenBtn
+			if delta.Magnitude > 5 then
+				hasMovedOpenBtn = true
+			end
+			
+			local newX = startPosOpenBtn.X + delta.X
+			local newY = startPosOpenBtn.Y + delta.Y
+			
+			local viewportSize = workspace.CurrentCamera.ViewportSize
+			local btnSize = openBtn.AbsoluteSize
+			
+			newX = math.clamp(newX, 0, viewportSize.X - btnSize.X)
+			newY = math.clamp(newY, 0, viewportSize.Y - btnSize.Y)
+			
+			openBtn.Position = UDim2.new(0, newX, 0, newY)
+		end
+	end
+end)
+
+resetBtn.MouseButton1Click:Connect(function()
+	playClick()
+	applySpeed(MIN_SPEED, true)
+end)
+
+minimizeBtn.MouseButton1Click:Connect(function()
+	playClick()
+	isMinimized = not isMinimized
+	
+	if isMinimized then
+		minimizeBtn.Text = "+"
+		scrollingContainer.Visible = false
+		playerListFrame.Visible = false
+		npcListFrame.Visible = false
+		mainFrame:TweenSize(UDim2.new(0, 260, 0, 35), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.2, true)
+	else
+		minimizeBtn.Text = "-"
+		mainFrame:TweenSize(UDim2.new(0, 260, 0, 380), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.2, true, function()
+			scrollingContainer.Visible = true
+		end)
+	end
+end)
+
+-- Lógica de Cerrar (X) - CON SONIDO
+closeBtn.MouseButton1Click:Connect(function()
+	playClick()
+	mainFrame.Visible = false
+	openBtn.Visible = true
+end)
+
+-- Lógica para reabrir el menú con el botón flotante "P" - SIN SONIDO
+openBtn.MouseButton1Click:Connect(function()
+	if not hasMovedOpenBtn then
+		openBtn.Visible = false
+		mainFrame.Visible = true
+	end
+end)
